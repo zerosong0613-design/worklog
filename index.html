@@ -188,8 +188,8 @@ body {
 /* 2-COLUMN GRID for record screen */
 .two-col {
   display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 24px;
+  grid-template-columns: 460px 1fr;
+  gap: 28px;
   align-items: start;
 }
 
@@ -235,9 +235,9 @@ body {
 
 select, input[type="text"], input[type="date"], textarea {
   width: 100%;
-  padding: 9px 12px;
+  padding: 11px 14px;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--paper);
@@ -252,20 +252,20 @@ select:focus, input:focus, textarea:focus {
   background: white;
 }
 
-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
 
 /* CAT PILLS */
 .cat-pill-row { display: flex; gap: 7px; margin-bottom: 4px; }
 
 .cat-pill {
   flex: 1;
-  padding: 9px 4px;
+  padding: 11px 6px;
   border: 2px solid var(--border);
   border-radius: 22px;
   background: var(--paper);
   cursor: pointer;
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
@@ -283,13 +283,13 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
 .status-pill {
   flex: 1;
-  padding: 8px 4px;
+  padding: 10px 4px;
   border: 2px solid var(--border);
   border-radius: 22px;
   background: var(--paper);
   cursor: pointer;
   font-family: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
@@ -357,13 +357,13 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 /* SAVE BUTTON */
 .btn-save {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   background: var(--navy);
   color: white;
   border: none;
   border-radius: var(--radius-sm);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
@@ -580,12 +580,35 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
 .btn-del-item:hover { background: var(--red-bg); color: var(--red); }
 
-/* ITEMS 2-COL */
+/* ITEMS GRID - PC 3col, mobile 1col */
 .items-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 22px;
+  align-items: start;
 }
+
+/* REPORT 2-col PC layout */
+.report-two-col {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.report-left { display: flex; flex-direction: column; gap: 16px; }
+.report-right { }
+
+/* BACKUP 2-col PC layout */
+.backup-two-col {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: start;
+}
+
+.backup-left { display: flex; flex-direction: column; gap: 18px; }
+.backup-right { display: flex; flex-direction: column; gap: 18px; }
 
 /* REPORT */
 .week-nav-card {
@@ -940,15 +963,25 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   .main-body { padding: 16px 14px 100px; }
   .two-col { grid-template-columns: 1fr; }
   .col-left .card { margin-bottom: 0; }
-  /* 2x2 grid on mobile */
   .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
   .stat-num { font-size: 22px; }
+  /* 모든 2컬럼 → 1컬럼 */
   .items-grid { grid-template-columns: 1fr; }
+  .report-two-col { grid-template-columns: 1fr; }
+  .backup-two-col { grid-template-columns: 1fr; }
   .report-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .backup-grid { grid-template-columns: 1fr; }
-  /* Hide form card on mobile — use bottom sheet instead */
+  /* Hide form card on mobile */
   .col-left { display: none; }
   .col-right .section-label { margin-top: 0; }
+  /* Mobile: smaller inputs */
+  select, input[type="text"], input[type="date"], textarea {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+  textarea { min-height: 80px; }
+  .cat-pill { padding: 9px 4px; font-size: 12px; }
+  .status-pill { padding: 8px 4px; font-size: 11px; }
+  .btn-save { padding: 12px; font-size: 13px; }
 }
 
 @media (max-width: 500px) {
@@ -1131,103 +1164,127 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
       <!-- ====== SCREEN: 보고서 ====== -->
       <div class="screen" id="screen-report">
-        <div class="week-nav-card">
-          <button class="week-arrow" onclick="moveWeek(-1)">&#8592;</button>
-          <div class="week-nav-center">
-            <div class="week-label" id="weekLabel">—</div>
-            <div class="week-range" id="weekRange">—</div>
-          </div>
-          <button class="week-arrow" onclick="moveWeek(1)" id="weekNextBtn">&#8594;</button>
-        </div>
+        <div class="report-two-col">
+          <!-- LEFT: 주 네비 + 요약 -->
+          <div class="report-left">
+            <div class="week-nav-card">
+              <button class="week-arrow" onclick="moveWeek(-1)">&#8592;</button>
+              <div class="week-nav-center">
+                <div class="week-label" id="weekLabel">—</div>
+                <div class="week-range" id="weekRange">—</div>
+              </div>
+              <button class="week-arrow" onclick="moveWeek(1)" id="weekNextBtn">&#8594;</button>
+            </div>
+            <div class="report-grid" id="weekSummaryRow"></div>
 
-        <div class="report-grid" id="weekSummaryRow"></div>
-
-        <div class="card">
-          <div class="card-title" style="justify-content:space-between">
-            <span>📋 주간보고서</span>
-            <button class="btn-copy" onclick="copyReport()">복사</button>
+            <!-- PC: 주별 상세 통계 -->
+            <div class="card" id="weekDetailStats">
+              <div class="card-title">📅 이번 주 현황</div>
+              <div id="weekDetailContent"></div>
+            </div>
           </div>
-          <div class="report-output" id="reportOutput">주를 선택하면 자동으로 보고서가 생성됩니다.</div>
+
+          <!-- RIGHT: 보고서 출력 -->
+          <div class="report-right">
+            <div class="card" style="height:100%">
+              <div class="card-title" style="justify-content:space-between">
+                <span>📋 주간보고서</span>
+                <button class="btn-copy" onclick="copyReport()">복사</button>
+              </div>
+              <div class="report-output" id="reportOutput" style="min-height:400px">주를 선택하면 자동으로 보고서가 생성됩니다.</div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- ====== SCREEN: 백업 ====== -->
       <div class="screen" id="screen-backup">
+        <div class="backup-two-col">
 
-        <!-- 클라우드 동기화 -->
-        <div class="card" style="max-width:680px;margin-bottom:18px;border-color:var(--amber)">
-          <div class="card-title" style="color:var(--amber)">☁️ 클라우드 동기화 <span id="cloudStatusBadge" style="margin-left:auto;font-size:10px;font-weight:500;color:var(--text-muted)">미설정</span></div>
+          <!-- LEFT: 클라우드 동기화 -->
+          <div class="backup-left">
+            <div class="card" style="border-color:var(--amber)">
+              <div class="card-title" style="color:var(--amber)">☁️ 클라우드 동기화 <span id="cloudStatusBadge" style="margin-left:auto;font-size:10px;font-weight:500;color:var(--text-muted)">미설정</span></div>
 
-          <div id="cloudSetupArea">
-            <div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:14px;background:var(--paper);border-radius:8px;padding:12px">
-              <strong style="color:var(--text)">📋 1회 설정 방법</strong><br>
-              ① <a href="https://jsonbin.io" target="_blank" style="color:var(--blue)">jsonbin.io</a> 에서 무료 가입<br>
-              ② 로그인 후 상단 <strong>API Keys</strong> 메뉴 → <strong>+ CREATE ACCESS KEY</strong><br>
-              ③ 생성된 키를 아래에 입력 → <strong>연결하기</strong> 클릭
-            </div>
-            <div class="form-group">
-              <div class="form-label">API Key</div>
-              <input type="text" id="cloudApiKey" placeholder="$2b$10$xxxxxxxxxxxxxxxxxxxx..." style="font-family:monospace;font-size:12px">
-            </div>
-            <div class="form-group" id="binIdGroup" style="display:none">
-              <div class="form-label">Bin ID <span style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-muted)">(자동 생성됩니다)</span></div>
-              <input type="text" id="cloudBinId" placeholder="자동 입력됨" readonly style="font-family:monospace;font-size:12px;background:#f0f0f0">
-            </div>
-            <button class="btn-save" style="max-width:200px" onclick="connectCloud()">🔗 연결하기</button>
-          </div>
-
-          <div id="cloudConnectedArea" style="display:none">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--green-bg);border-radius:8px;padding:12px">
-              <span style="font-size:20px">✅</span>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:var(--green)">클라우드 연결됨</div>
-                <div style="font-size:11px;color:var(--text-muted)" id="cloudBinDisplay"></div>
+              <div id="cloudSetupArea">
+                <div style="font-size:12px;color:var(--text-muted);line-height:1.8;margin-bottom:14px;background:var(--paper);border-radius:8px;padding:12px">
+                  <strong style="color:var(--text)">📋 사용 방법</strong><br>
+                  <strong style="color:var(--green)">처음 사용 (새 저장소 만들기)</strong><br>
+                  아래 입력창을 <strong>비워두고</strong> → <strong>연결하기</strong> 클릭<br>
+                  → 저장소 ID 자동 생성 → ID를 메모해두세요<br><br>
+                  <strong style="color:var(--blue)">다른 기기에서 연결하기</strong><br>
+                  처음에 받은 <strong>저장소 ID</strong>를 아래에 입력 → <strong>연결하기</strong>
+                </div>
+                <div class="form-group">
+                  <div class="form-label">저장소 ID <span style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-muted)">(처음이면 비워두세요)</span></div>
+                  <input type="text" id="cloudApiKey" placeholder="처음이면 비워두고 연결하기 클릭..." style="font-family:monospace;font-size:12px">
+                </div>
+                <button class="btn-save" onclick="connectCloud()">🔗 연결하기</button>
               </div>
-              <button onclick="disconnectCloud()" style="margin-left:auto;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:white;font-size:11px;cursor:pointer;color:var(--text-muted)">해제</button>
-            </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-              <div class="backup-card" onclick="pushToCloud()" style="padding:16px">
-                <div class="backup-icon" style="font-size:28px">☁️⬆️</div>
-                <div class="backup-title">서버에 저장</div>
-                <div class="backup-desc">현재 데이터를 클라우드에 업로드</div>
+              <div id="cloudConnectedArea" style="display:none">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--green-bg);border-radius:8px;padding:12px">
+                  <span style="font-size:20px">✅</span>
+                  <div>
+                    <div style="font-size:13px;font-weight:700;color:var(--green)">클라우드 연결됨</div>
+                    <div style="font-size:11px;color:var(--text-muted)" id="cloudBinDisplay"></div>
+                  </div>
+                  <button onclick="disconnectCloud()" style="margin-left:auto;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:white;font-size:11px;cursor:pointer;color:var(--text-muted)">해제</button>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+                  <div class="backup-card" onclick="pushToCloud()" style="padding:20px">
+                    <div class="backup-icon" style="font-size:30px">☁️⬆️</div>
+                    <div class="backup-title">서버에 저장</div>
+                    <div class="backup-desc">현재 데이터를 클라우드에 업로드</div>
+                  </div>
+                  <div class="backup-card" onclick="pullFromCloud()" style="padding:20px">
+                    <div class="backup-icon" style="font-size:30px">☁️⬇️</div>
+                    <div class="backup-title">서버에서 불러오기</div>
+                    <div class="backup-desc">클라우드 데이터로 현재 기기 동기화</div>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--paper);border-radius:8px;border:1px solid var(--border)">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text)">
+                    <input type="checkbox" id="autoSyncToggle" onchange="toggleAutoSync(this)" style="width:16px;height:16px;accent-color:var(--amber)">
+                    저장할 때마다 자동 동기화
+                  </label>
+                  <span style="font-size:11px;color:var(--text-muted);margin-left:auto" id="lastSyncTime"></span>
+                </div>
               </div>
-              <div class="backup-card" onclick="pullFromCloud()" style="padding:16px">
-                <div class="backup-icon" style="font-size:28px">☁️⬇️</div>
-                <div class="backup-title">서버에서 불러오기</div>
-                <div class="backup-desc">클라우드 데이터로 현재 기기 동기화</div>
+            </div>
+
+            <!-- 로컬 파일 백업 -->
+            <div class="card">
+              <div class="card-title">📁 로컬 파일 백업</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div class="backup-card" onclick="exportData()" style="padding:20px">
+                  <div class="backup-icon" style="font-size:30px">📤</div>
+                  <div class="backup-title">파일로 내보내기</div>
+                  <div class="backup-desc">JSON 파일로 저장</div>
+                </div>
+                <div class="backup-card" onclick="importData()" style="padding:20px">
+                  <div class="backup-icon" style="font-size:30px">📥</div>
+                  <div class="backup-title">파일에서 불러오기</div>
+                  <div class="backup-desc">JSON 파일에서 복원</div>
+                </div>
               </div>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--paper);border-radius:8px;border:1px solid var(--border)">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text)">
-                <input type="checkbox" id="autoSyncToggle" onchange="toggleAutoSync(this)" style="width:16px;height:16px;accent-color:var(--amber)">
-                저장할 때마다 자동으로 서버 동기화
-              </label>
-              <span style="font-size:11px;color:var(--text-muted);margin-left:auto" id="lastSyncTime"></span>
+              <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
             </div>
           </div>
-        </div>
 
-        <!-- 로컬 파일 백업 -->
-        <div class="section-label" style="margin-bottom:10px">로컬 파일 백업</div>
-        <div class="backup-grid">
-          <div class="backup-card" onclick="exportData()">
-            <div class="backup-icon">📤</div>
-            <div class="backup-title">파일로 내보내기</div>
-            <div class="backup-desc">전체 데이터를 JSON 파일로 저장</div>
+          <!-- RIGHT: 통계 요약 -->
+          <div class="backup-right">
+            <div class="card">
+              <div class="card-title">📊 통계 요약</div>
+              <div id="summaryStats"></div>
+            </div>
+            <div class="card" style="margin-top:0">
+              <div class="card-title">📈 최근 기록 추이</div>
+              <div id="recentTrend"></div>
+            </div>
           </div>
-          <div class="backup-card" onclick="importData()">
-            <div class="backup-icon">📥</div>
-            <div class="backup-title">파일에서 불러오기</div>
-            <div class="backup-desc">저장된 JSON 파일에서 복원</div>
-          </div>
-        </div>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
-
-        <div class="card" style="margin-top:18px;max-width:600px">
-          <div class="card-title">📊 통계 요약</div>
-          <div id="summaryStats"></div>
         </div>
       </div>
 
@@ -1840,8 +1897,7 @@ function renderReportScreen() {
   document.getElementById('weekNextBtn').disabled = currentWeekOffset >= 0;
 
   const logs = db.logs.filter(l => l.date >= monStr && l.date <= sunStr);
-  const cats = ['루틴업무','프로젝트','자율업무'];
-  const colors = ['var(--blue)','var(--green)','var(--amber)'];
+  const cats = ['루틴업무','프로젝트','자율업무'];  const colors = ['var(--blue)','var(--green)','var(--amber)'];
   const icons = ['📌','🗂','💡'];
   document.getElementById('weekSummaryRow').innerHTML = cats.map((cat,i) => {
     const cnt = logs.filter(l=>l.category===cat).length;
@@ -1855,6 +1911,40 @@ function renderReportScreen() {
   }).join('');
 
   generateReport(monStr, sunStr);
+  renderWeekDetail(logs);
+}
+
+function renderWeekDetail(logs) {
+  const el = document.getElementById('weekDetailContent');
+  if (!el) return;
+  if (logs.length === 0) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px"><div class="empty-icon">📭</div>기록 없음</div>`;
+    return;
+  }
+  const statusList = ['완료','진행중','이슈','다음주'];
+  const statusCount = {};
+  logs.forEach(l => { statusCount[l.status] = (statusCount[l.status]||0)+1; });
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      ${statusList.map(s => `
+        <div style="background:var(--paper);border-radius:8px;padding:10px 12px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <span class="badge badge-${s}" style="width:46px;justify-content:center">${s}</span>
+          <span style="font-size:18px;font-weight:700;color:var(--navy)">${statusCount[s]||0}</span>
+        </div>`).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">항목별 기록 수</div>
+    ${Object.entries(
+        logs.reduce((acc,l) => { acc[l.itemName]=(acc[l.itemName]||0)+1; return acc; }, {})
+      ).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([name,cnt]) => `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px">
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+        <div style="width:80px;background:var(--paper-dark);border-radius:4px;height:6px;overflow:hidden">
+          <div style="height:6px;border-radius:4px;background:var(--amber);width:${cnt/logs.length*100}%"></div>
+        </div>
+        <span style="font-weight:700;color:var(--navy);width:16px;text-align:right">${cnt}</span>
+      </div>`).join('')}
+  `;
 }
 
 function generateReport(from, to) {
@@ -1960,7 +2050,31 @@ function renderSummaryStats() {
   db.logs.forEach(l => { catCount[l.category] = (catCount[l.category]||0)+1; });
   const itemCount = Object.values(db.categories).reduce((a,b)=>a+b.length, 0);
 
-  document.getElementById('summaryStats').innerHTML = `
+  // 최근 추이
+  const trendEl = document.getElementById('recentTrend');
+  if (trendEl) {
+    const last7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const days = ['일','월','화','수','목','금','토'];
+      last7.push({ date: ds, label: days[d.getDay()], count: db.logs.filter(l=>l.date===ds).length });
+    }
+    const maxCount = Math.max(...last7.map(d=>d.count), 1);
+    trendEl.innerHTML = `
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px;margin-bottom:8px">
+        ${last7.map(d => `
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+            <span style="font-size:10px;font-weight:700;color:var(--navy)">${d.count||''}</span>
+            <div style="width:100%;background:${d.count>0?'var(--amber)':'var(--paper-dark)'};border-radius:4px 4px 0 0;height:${Math.max(d.count/maxCount*56,d.count>0?6:2)}px;transition:height 0.3s"></div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px">
+        ${last7.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--text-muted)">${d.label}</div>`).join('')}
+      </div>
+    `;
+  }
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
       <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">전체 기록</div></div>
       <div class="stat-card"><div class="stat-num">${thisWeek}</div><div class="stat-label">이번 주</div></div>
@@ -1978,12 +2092,12 @@ function renderSummaryStats() {
   `;
 }
 
-// ===== CLOUD SYNC (JSONBin.io) =====
-const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+// ===== CLOUD SYNC (npoint.io) =====
+// npoint.io: 무료, CORS 지원, 인증 불필요, JSON 저장소
 
 function loadCloudSettings() {
   const s = localStorage.getItem('cloudSettings_v1');
-  return s ? JSON.parse(s) : { apiKey: '', binId: '', autoSync: false, lastSync: '' };
+  return s ? JSON.parse(s) : { pointId: '', lastSync: '', autoSync: false };
 }
 
 function saveCloudSettings(settings) {
@@ -1992,66 +2106,83 @@ function saveCloudSettings(settings) {
 
 function initCloudUI() {
   const s = loadCloudSettings();
-  if (s.apiKey && s.binId) {
+  if (s.pointId) {
     showCloudConnected(s);
-  } else if (s.apiKey) {
-    document.getElementById('cloudApiKey').value = s.apiKey;
   }
 }
 
 function showCloudConnected(s) {
   document.getElementById('cloudSetupArea').style.display = 'none';
   document.getElementById('cloudConnectedArea').style.display = 'block';
-  document.getElementById('cloudBinDisplay').textContent = `Bin ID: ${s.binId}`;
+  document.getElementById('cloudBinDisplay').textContent = `저장소 ID: ${s.pointId}`;
   document.getElementById('cloudStatusBadge').textContent = '연결됨 ✅';
   document.getElementById('cloudStatusBadge').style.color = 'var(--green)';
   const tog = document.getElementById('autoSyncToggle');
-  if (tog) tog.checked = s.autoSync;
+  if (tog) tog.checked = !!s.autoSync;
   if (s.lastSync) {
-    document.getElementById('lastSyncTime').textContent = `마지막 동기화: ${s.lastSync}`;
+    const el = document.getElementById('lastSyncTime');
+    if (el) el.textContent = `마지막 동기화: ${s.lastSync}`;
   }
 }
 
 async function connectCloud() {
-  const apiKey = document.getElementById('cloudApiKey').value.trim();
-  if (!apiKey) { showToast('API Key를 입력해주세요'); return; }
+  const pointId = document.getElementById('cloudApiKey').value.trim();
 
-  showToast('🔗 연결 중...');
-
-  try {
-    // 기존 Bin ID가 있는지 확인
-    const s = loadCloudSettings();
-    let binId = s.binId;
-
-    if (!binId) {
-      // 새 Bin 생성
-      const res = await fetch(`${JSONBIN_BASE}/b`, {
+  // 새 저장소 만들기 (ID 입력 없을 때)
+  if (!pointId) {
+    showToast('☁️ 새 저장소 생성 중...');
+    try {
+      const res = await fetch('https://api.npoint.io/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': apiKey,
-          'X-Bin-Name': '법무업무기록',
-          'X-Bin-Private': 'true'
-        },
-        body: JSON.stringify(db)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: db })
       });
-      if (!res.ok) throw new Error('Bin 생성 실패 (API Key를 확인해주세요)');
-      const data = await res.json();
-      binId = data.metadata.id;
-    }
+      if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+      const result = await res.json();
+      const newId = result?.id || result?.data?.id;
+      if (!newId) throw new Error('ID 생성 실패');
 
-    const settings = { apiKey, binId, autoSync: false, lastSync: '' };
+      const settings = { pointId: newId, autoSync: false, lastSync: '' };
+      saveCloudSettings(settings);
+      showCloudConnected(settings);
+
+      // 사용자에게 ID 복사하도록 안내
+      document.getElementById('cloudBinDisplay').innerHTML =
+        `저장소 ID: <strong style="color:var(--navy)">${newId}</strong> &nbsp;
+        <button onclick="copyPointId('${newId}')" style="padding:2px 8px;font-size:11px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:white">복사</button>
+        <br><span style="font-size:10px;color:var(--orange)">⚠️ 다른 기기에서 쓸 때 이 ID가 필요합니다. 저장해두세요!</span>`;
+      showToast('✅ 저장소 생성 완료!');
+    } catch(e) {
+      showToast('❌ ' + (e.message || '생성 실패'));
+    }
+    return;
+  }
+
+  // 기존 ID로 연결
+  showToast('🔗 연결 확인 중...');
+  try {
+    const res = await fetch(`https://api.npoint.io/${pointId}`);
+    if (res.status === 404) throw new Error('저장소 ID를 찾을 수 없습니다');
+    if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+    const data = await res.json();
+    if (!data?.logs || !data?.categories) throw new Error('올바른 저장소가 아닙니다');
+
+    const settings = { pointId, autoSync: false, lastSync: '' };
     saveCloudSettings(settings);
     showCloudConnected(settings);
-    showToast('✅ 클라우드 연결 완료! 데이터가 저장되었습니다');
+    showToast('✅ 연결 완료!');
   } catch(e) {
     showToast('❌ ' + (e.message || '연결 실패'));
   }
 }
 
+function copyPointId(id) {
+  navigator.clipboard.writeText(id).then(() => showToast('📋 ID 복사됨'));
+}
+
 function disconnectCloud() {
   if (!confirm('클라우드 연결을 해제할까요? 로컬 데이터는 유지됩니다.')) return;
-  saveCloudSettings({ apiKey: '', binId: '', autoSync: false, lastSync: '' });
+  saveCloudSettings({ pointId: '', autoSync: false, lastSync: '' });
   document.getElementById('cloudSetupArea').style.display = 'block';
   document.getElementById('cloudConnectedArea').style.display = 'none';
   document.getElementById('cloudStatusBadge').textContent = '미설정';
@@ -2062,23 +2193,19 @@ function disconnectCloud() {
 
 async function pushToCloud() {
   const s = loadCloudSettings();
-  if (!s.apiKey || !s.binId) { showToast('클라우드가 연결되지 않았습니다'); return; }
+  if (!s.pointId) { showToast('클라우드가 연결되지 않았습니다'); return; }
 
   showToast('☁️ 서버에 저장 중...');
   try {
-    const res = await fetch(`${JSONBIN_BASE}/b/${s.binId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': s.apiKey
-      },
+    const res = await fetch(`https://api.npoint.io/${s.pointId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(db)
     });
-    if (!res.ok) throw new Error('저장 실패');
+    if (!res.ok) throw new Error(`저장 실패 ${res.status}`);
 
     const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    s.lastSync = `${todayStr()} ${timeStr}`;
+    s.lastSync = `${todayStr()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     saveCloudSettings(s);
     const el = document.getElementById('lastSyncTime');
     if (el) el.textContent = `마지막 동기화: ${s.lastSync}`;
@@ -2090,31 +2217,22 @@ async function pushToCloud() {
 
 async function pullFromCloud() {
   const s = loadCloudSettings();
-  if (!s.apiKey || !s.binId) { showToast('클라우드가 연결되지 않았습니다'); return; }
-
+  if (!s.pointId) { showToast('클라우드가 연결되지 않았습니다'); return; }
   if (!confirm('서버 데이터로 현재 기기를 덮어씁니다. 계속할까요?')) return;
 
   showToast('☁️ 서버에서 불러오는 중...');
   try {
-    const res = await fetch(`${JSONBIN_BASE}/b/${s.binId}/latest`, {
-      headers: { 'X-Master-Key': s.apiKey }
-    });
-    if (!res.ok) throw new Error('불러오기 실패');
+    const res = await fetch(`https://api.npoint.io/${s.pointId}`);
+    if (!res.ok) throw new Error(`불러오기 실패 ${res.status}`);
     const data = await res.json();
-    const record = data.record;
-    if (!record.categories || !record.logs) throw new Error('올바른 데이터가 아닙니다');
+    if (!data?.categories || !data?.logs) throw new Error('올바른 데이터가 아닙니다');
 
-    db = record;
-    saveDB();
-    renderStats();
-    renderLogList();
-    renderItemsGrid();
-    renderSummaryStats();
-    renderSidebarStats();
+    db = data;
+    localStorage.setItem('legalWorkLog_v1', JSON.stringify(db)); // saveDB 없이 직접 저장 (무한루프 방지)
+    renderStats(); renderLogList(); renderItemsGrid(); renderSummaryStats(); renderSidebarStats();
 
     const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    s.lastSync = `${todayStr()} ${timeStr}`;
+    s.lastSync = `${todayStr()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     saveCloudSettings(s);
     const el = document.getElementById('lastSyncTime');
     if (el) el.textContent = `마지막 동기화: ${s.lastSync}`;
@@ -2133,8 +2251,17 @@ function toggleAutoSync(checkbox) {
 
 async function autoSyncIfEnabled() {
   const s = loadCloudSettings();
-  if (s.autoSync && s.apiKey && s.binId) {
-    await pushToCloud();
+  if (s.autoSync && s.pointId) {
+    try {
+      await fetch(`https://api.npoint.io/${s.pointId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(db)
+      });
+      const now = new Date();
+      s.lastSync = `${todayStr()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      saveCloudSettings(s);
+    } catch(e) { /* 자동저장 실패는 조용히 */ }
   }
 }
 
