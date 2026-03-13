@@ -1208,16 +1208,16 @@ textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
 
               <div id="cloudSetupArea">
                 <div style="font-size:12px;color:var(--text-muted);line-height:1.8;margin-bottom:14px;background:var(--paper);border-radius:8px;padding:12px">
-                  <strong style="color:var(--text)">📋 사용 방법</strong><br>
-                  <strong style="color:var(--green)">처음 사용 (새 저장소 만들기)</strong><br>
-                  아래 입력창을 <strong>비워두고</strong> → <strong>연결하기</strong> 클릭<br>
-                  → 저장소 ID 자동 생성 → ID를 메모해두세요<br><br>
-                  <strong style="color:var(--blue)">다른 기기에서 연결하기</strong><br>
-                  처음에 받은 <strong>저장소 ID</strong>를 아래에 입력 → <strong>연결하기</strong>
+                  <strong style="color:var(--text)">📋 1회 설정 방법</strong><br>
+                  ① <a href="https://jsonbin.io" target="_blank" style="color:var(--blue)">jsonbin.io</a> 무료 가입<br>
+                  ② 로그인 후 우측 상단 프로필 → <strong>Account Settings</strong><br>
+                  ③ <strong>Secret Key</strong> 복사 (자동 생성된 키)<br>
+                  ④ 아래에 붙여넣기 → <strong>연결하기</strong><br>
+                  <span style="color:var(--text-muted);font-size:11px">💡 다른 기기에서도 같은 Secret Key로 연결하면 자동 동기화</span>
                 </div>
                 <div class="form-group">
-                  <div class="form-label">저장소 ID <span style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-muted)">(처음이면 비워두세요)</span></div>
-                  <input type="text" id="cloudApiKey" placeholder="처음이면 비워두고 연결하기 클릭..." style="font-family:monospace;font-size:12px">
+                  <div class="form-label">Secret Key</div>
+                  <input type="password" id="cloudApiKey" placeholder="$2b$10$..." style="font-family:monospace;font-size:12px">
                 </div>
                 <button class="btn-save" onclick="connectCloud()">🔗 연결하기</button>
               </div>
@@ -2100,14 +2100,14 @@ function renderSummaryStats() {
 }
 
 
-// ===== CLOUD SYNC (jsonblob.com) =====
-// jsonblob.com: 무료, CORS 완전 지원, API로 생성/조회/수정 가능, 인증 불필요
+// ===== CLOUD SYNC (JSONBin.io) =====
+// JSONBin: 브라우저 CORS 완전 지원, 무료, Master Key 1회 입력
 
-const BLOB_BASE = 'https://jsonblob.com/api/jsonBlob';
+const JBIN_BASE = 'https://api.jsonbin.io/v3/b';
 
 function loadCloudSettings() {
   const s = localStorage.getItem('cloudSettings_v1');
-  return s ? JSON.parse(s) : { blobId: '', lastSync: '', autoSync: false };
+  return s ? JSON.parse(s) : { masterKey: '', binId: '', lastSync: '', autoSync: false };
 }
 
 function saveCloudSettings(settings) {
@@ -2116,13 +2116,13 @@ function saveCloudSettings(settings) {
 
 function initCloudUI() {
   const s = loadCloudSettings();
-  if (s.blobId) showCloudConnected(s);
+  if (s.masterKey && s.binId) showCloudConnected(s);
 }
 
 function showCloudConnected(s) {
   document.getElementById('cloudSetupArea').style.display = 'none';
   document.getElementById('cloudConnectedArea').style.display = 'block';
-  document.getElementById('cloudBinDisplay').textContent = '저장소 ID: ' + s.blobId;
+  document.getElementById('cloudBinDisplay').textContent = 'Bin ID: ' + s.binId;
   document.getElementById('cloudStatusBadge').textContent = '연결됨 ✅';
   document.getElementById('cloudStatusBadge').style.color = 'var(--green)';
   const tog = document.getElementById('autoSyncToggle');
@@ -2134,68 +2134,57 @@ function showCloudConnected(s) {
 }
 
 async function connectCloud() {
-  const inputId = document.getElementById('cloudApiKey').value.trim();
+  const masterKey = document.getElementById('cloudApiKey').value.trim();
+  if (!masterKey) { showToast('Secret Key를 입력해주세요'); return; }
 
-  if (!inputId) {
-    // 새 Blob 생성
-    showToast('☁️ 새 저장소 생성 중...');
-    try {
-      const res = await fetch(BLOB_BASE, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(db)
-      });
-      if (!res.ok) throw new Error('서버 오류 ' + res.status);
-      // Location 헤더에서 ID 추출: https://jsonblob.com/api/jsonBlob/123456
-      const location = res.headers.get('Location') || res.url || '';
-      const blobId = location.split('/').pop();
-      if (!blobId) throw new Error('저장소 ID를 받지 못했습니다');
-
-      const settings = { blobId, autoSync: false, lastSync: '' };
-      saveCloudSettings(settings);
-      showCloudConnected(settings);
-
-      const display = document.getElementById('cloudBinDisplay');
-      if (display) {
-        display.innerHTML =
-          '저장소 ID: <strong style="color:var(--navy)">' + blobId + '</strong> &nbsp;' +
-          '<button onclick="copyBlobId(this.dataset.id)" data-id="' + blobId + '" style="padding:2px 8px;font-size:11px;border:1px solid var(--border);border-radius:4px;cursor:pointer;background:white">복사</button>' +
-          '<br><span style="font-size:10px;color:var(--orange)">⚠️ 다른 기기 연결 시 이 ID가 필요합니다. 꼭 메모해두세요!</span>';
-      }
-      showToast('✅ 저장소 생성 완료!');
-    } catch(e) {
-      showToast('❌ ' + (e.message || '생성 실패'));
-    }
-    return;
-  }
-
-  // 기존 ID로 연결 확인
-  showToast('🔗 연결 확인 중...');
+  showToast('☁️ 연결 중...');
   try {
-    const res = await fetch(BLOB_BASE + '/' + inputId, {
-      headers: { 'Accept': 'application/json' }
-    });
-    if (res.status === 404) throw new Error('저장소 ID를 찾을 수 없습니다');
-    if (!res.ok) throw new Error('서버 오류 ' + res.status);
-    const data = await res.json();
-    if (!data?.logs || !data?.categories) throw new Error('올바른 저장소가 아닙니다');
+    // 기존 연결이 있으면 재사용
+    const prev = loadCloudSettings();
+    if (prev.masterKey === masterKey && prev.binId) {
+      showCloudConnected(prev);
+      showToast('✅ 기존 저장소에 연결됨');
+      return;
+    }
 
-    const settings = { blobId: inputId, autoSync: false, lastSync: '' };
+    // 새 Bin 생성
+    const res = await fetch(JBIN_BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': masterKey,
+        'X-Bin-Name': '법무업무기록',
+        'X-Bin-Private': 'true'
+      },
+      body: JSON.stringify(db)
+    });
+
+    if (res.status === 401) { showToast('❌ 인증 실패 — Secret Key를 확인해주세요'); return; }
+    if (!res.ok) throw new Error('서버 오류 ' + res.status);
+
+    const data = await res.json();
+    const binId = data?.metadata?.id;
+    if (!binId) throw new Error('Bin ID를 받지 못했습니다');
+
+    const settings = { masterKey, binId, autoSync: false, lastSync: '' };
     saveCloudSettings(settings);
     showCloudConnected(settings);
-    showToast('✅ 연결 완료!');
+
+    const display = document.getElementById('cloudBinDisplay');
+    if (display) {
+      display.innerHTML =
+        'Bin ID: <strong style="color:var(--navy)">' + binId + '</strong>' +
+        '<br><span style="font-size:10px;color:var(--orange)">⚠️ 다른 기기 연결 시 같은 Secret Key 입력하면 자동 연결됩니다</span>';
+    }
+    showToast('✅ 저장소 생성 및 연결 완료!');
   } catch(e) {
     showToast('❌ ' + (e.message || '연결 실패'));
   }
 }
 
-function copyBlobId(id) {
-  navigator.clipboard.writeText(id).then(function() { showToast('📋 ID 복사됨'); });
-}
-
 function disconnectCloud() {
   if (!confirm('클라우드 연결을 해제할까요? 로컬 데이터는 유지됩니다.')) return;
-  saveCloudSettings({ blobId: '', autoSync: false, lastSync: '' });
+  saveCloudSettings({ masterKey: '', binId: '', autoSync: false, lastSync: '' });
   document.getElementById('cloudSetupArea').style.display = 'block';
   document.getElementById('cloudConnectedArea').style.display = 'none';
   document.getElementById('cloudStatusBadge').textContent = '미설정';
@@ -2206,12 +2195,12 @@ function disconnectCloud() {
 
 async function pushToCloud() {
   const s = loadCloudSettings();
-  if (!s.blobId) { showToast('클라우드가 연결되지 않았습니다'); return; }
+  if (!s.masterKey || !s.binId) { showToast('클라우드가 연결되지 않았습니다'); return; }
   showToast('☁️ 서버에 저장 중...');
   try {
-    const res = await fetch(BLOB_BASE + '/' + s.blobId, {
+    const res = await fetch(JBIN_BASE + '/' + s.binId, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': s.masterKey },
       body: JSON.stringify(db)
     });
     if (!res.ok) throw new Error('저장 실패 ' + res.status);
@@ -2228,17 +2217,18 @@ async function pushToCloud() {
 
 async function pullFromCloud() {
   const s = loadCloudSettings();
-  if (!s.blobId) { showToast('클라우드가 연결되지 않았습니다'); return; }
+  if (!s.masterKey || !s.binId) { showToast('클라우드가 연결되지 않았습니다'); return; }
   if (!confirm('서버 데이터로 현재 기기를 덮어씁니다. 계속할까요?')) return;
   showToast('☁️ 서버에서 불러오는 중...');
   try {
-    const res = await fetch(BLOB_BASE + '/' + s.blobId, {
-      headers: { 'Accept': 'application/json' }
+    const res = await fetch(JBIN_BASE + '/' + s.binId + '/latest', {
+      headers: { 'X-Master-Key': s.masterKey }
     });
     if (!res.ok) throw new Error('불러오기 실패 ' + res.status);
     const data = await res.json();
-    if (!data?.categories || !data?.logs) throw new Error('올바른 데이터가 아닙니다');
-    db = data;
+    const record = data?.record;
+    if (!record?.categories || !record?.logs) throw new Error('올바른 데이터가 아닙니다');
+    db = record;
     localStorage.setItem('legalWorkLog_v1', JSON.stringify(db));
     renderStats(); renderLogList(); renderItemsGrid(); renderSummaryStats(); renderSidebarStats();
     const now = new Date();
@@ -2261,11 +2251,11 @@ function toggleAutoSync(checkbox) {
 
 async function autoSyncIfEnabled() {
   const s = loadCloudSettings();
-  if (s.autoSync && s.blobId) {
+  if (s.autoSync && s.masterKey && s.binId) {
     try {
-      await fetch(BLOB_BASE + '/' + s.blobId, {
+      await fetch(JBIN_BASE + '/' + s.binId, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': s.masterKey },
         body: JSON.stringify(db)
       });
       const now = new Date();
