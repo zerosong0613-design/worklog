@@ -2141,13 +2141,13 @@ async function connectCloud() {
     showToast('☁️ 새 저장소 생성 중...');
     try {
       const res = await fetch(BLOB_BASE, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(db)
       });
       if (!res.ok) throw new Error('서버 오류 ' + res.status);
       // Location 헤더에서 ID 추출: https://jsonblob.com/api/jsonBlob/123456
-      const location = res.headers.get('Location') || '';
+      const location = res.headers.get('Location') || res.url || '';
       const blobId = location.split('/').pop();
       if (!blobId) throw new Error('저장소 ID를 받지 못했습니다');
 
