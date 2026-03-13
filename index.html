@@ -2134,7 +2134,11 @@ function showCloudConnected(s) {
 }
 
 async function connectCloud() {
-  const masterKey = document.getElementById('cloudApiKey').value.trim();
+  // ISO-8859-1 범위 밖 문자 자동 제거 (복사 시 유니코드 문자 딸려오는 문제 방지)
+  const raw = document.getElementById('cloudApiKey').value;
+  const masterKey = raw.replace(/[^\x00-\xFF]/g, '').trim();
+  document.getElementById('cloudApiKey').value = masterKey;
+
   if (!masterKey) { showToast('Secret Key를 입력해주세요'); return; }
 
   showToast('☁️ 연결 중...');
