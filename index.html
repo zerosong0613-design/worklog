@@ -1424,6 +1424,17 @@ textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
 
 <div class="toast" id="toast"></div>
 
+<!-- 커스텀 Confirm 모달 (모바일 confirm() 차단 대응) -->
+<div id="confirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:10000;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:24px 22px;width:calc(100% - 48px);max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.2)">
+    <div id="confirmMsg" style="font-size:14px;font-weight:600;color:#1a2233;line-height:1.6;margin-bottom:20px;text-align:center"></div>
+    <div style="display:flex;gap:10px">
+      <button id="confirmCancel" style="flex:1;padding:11px;border:1.5px solid #ddd;border-radius:10px;background:white;font-size:13px;font-weight:600;cursor:pointer;color:#666">취소</button>
+      <button id="confirmOk" style="flex:1;padding:11px;border:none;border-radius:10px;background:#c8873c;color:white;font-size:13px;font-weight:700;cursor:pointer">확인</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ===== DATA =====
 let db = {
@@ -1475,6 +1486,25 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// 모바일에서 confirm()이 차단되는 문제 대응 — Promise 기반 커스텀 다이얼로그
+function customConfirm(msg) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmMsg').textContent = msg;
+    overlay.style.display = 'flex';
+    const ok = document.getElementById('confirmOk');
+    const cancel = document.getElementById('confirmCancel');
+    const cleanup = (result) => {
+      overlay.style.display = 'none';
+      ok.replaceWith(ok.cloneNode(true));
+      cancel.replaceWith(cancel.cloneNode(true));
+      resolve(result);
+    };
+    document.getElementById('confirmOk').addEventListener('click', () => cleanup(true));
+    document.getElementById('confirmCancel').addEventListener('click', () => cleanup(false));
+  });
 }
 
 // ===== INIT =====
@@ -2512,7 +2542,7 @@ async function pushToCloud() {
 async function pullFromCloud() {
   const s = loadCloudSettings();
   if (!s.masterKey || !s.binId) { showToast('클라우드가 연결되지 않았습니다'); return; }
-  if (!confirm('서버 데이터로 현재 기기를 덮어씁니다. 계속할까요?')) return;
+  if (!await customConfirm('서버 데이터로 현재 기기를 덮어씁니다. 계속할까요?')) return;
   showToast('☁️ 서버에서 불러오는 중...');
   try {
     const res = await fetch(JBIN_BASE + '/' + s.binId + '/latest', {
@@ -2525,7 +2555,7 @@ async function pullFromCloud() {
     if (!record.closedItems) record.closedItems = {};  // 구버전 데이터 마이그레이션
     db = record;
     localStorage.setItem('legalWorkLog_v1', JSON.stringify(db));
-    renderStats(); renderLogList(); renderItemsGrid(); renderSummaryStats(); renderSidebarStats();
+    renderStats(); renderLogList(); renderItemsGrid(); renderSummaryStats(); renderSidebarStats(); renderCatPills();
     const now = new Date();
     s.lastSync = todayStr() + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
     saveCloudSettings(s);
