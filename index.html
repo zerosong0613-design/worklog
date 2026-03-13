@@ -536,19 +536,21 @@ textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
 .item-list-entry {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
+  padding: 11px 14px;
   background: var(--paper);
   border-radius: var(--radius-sm);
   margin-bottom: 6px;
   border: 1px solid var(--border);
+  transition: border-color 0.15s;
 }
+.item-list-entry:hover { border-color: var(--amber); }
 
-.item-list-entry .item-entry-name { flex: 1; font-size: 13px; font-weight: 500; }
-.item-entry-count { font-size: 11px; color: var(--text-muted); margin-right: 8px; }
+.item-list-entry .item-entry-name { flex: 1; font-size: 14px; font-weight: 500; }
+.item-entry-count { font-size: 12px; color: var(--text-muted); margin-right: 10px; background: var(--paper-dark); padding: 2px 8px; border-radius: 10px; }
 
 .item-edit-input {
   flex: 1;
-  padding: 5px 9px;
+  padding: 7px 10px;
   font-family: inherit;
   font-size: 13px;
   border: 1.5px solid var(--amber);
@@ -559,26 +561,28 @@ textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
 }
 
 .btn-edit-item {
-  width: 26px; height: 26px;
-  border: none; border-radius: 4px;
-  background: none; cursor: pointer;
-  font-size: 12px; color: var(--text-muted);
-  transition: all 0.15s;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.btn-edit-item:hover { background: var(--blue-bg); color: var(--blue); }
-
-.btn-del-item {
-  width: 26px; height: 26px;
-  border: none; border-radius: 4px;
-  background: none; cursor: pointer;
+  width: 30px; height: 30px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: white; cursor: pointer;
   font-size: 13px; color: var(--text-muted);
   transition: all 0.15s;
   display: flex; align-items: center; justify-content: center;
+  margin-left: 4px;
 }
 
-.btn-del-item:hover { background: var(--red-bg); color: var(--red); }
+.btn-edit-item:hover { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); }
+
+.btn-del-item {
+  width: 30px; height: 30px;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: white; cursor: pointer;
+  font-size: 14px; color: var(--text-muted);
+  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  margin-left: 4px;
+}
+
+.btn-del-item:hover { background: var(--red-bg); border-color: var(--red); color: var(--red); }
 
 /* ITEMS GRID - PC 3col, mobile 1col */
 .items-grid {
@@ -1171,6 +1175,9 @@ textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
               <button class="week-arrow" onclick="moveWeek(-1)">&#8592;</button>
               <div class="week-nav-center">
                 <div class="week-label" id="weekLabel">—</div>
+                <div style="margin-bottom:3px">
+                  <span id="weekSuffix" style="display:none;font-size:10px;font-weight:600;background:rgba(255,255,255,0.18);color:white;padding:2px 8px;border-radius:10px;letter-spacing:0.3px"></span>
+                </div>
                 <div class="week-range" id="weekRange">—</div>
               </div>
               <button class="week-arrow" onclick="moveWeek(1)" id="weekNextBtn">&#8594;</button>
@@ -1749,36 +1756,159 @@ function saveEdit(id) {
 
 // ===== ITEM MANAGEMENT (3-column grid) =====
 function renderItemsGrid() {
-  const cats = ['루틴업무','프로젝트','자율업무'];
-  const icons = {'루틴업무':'📌','프로젝트':'🗂','자율업무':'💡'};
-  const colors = {'루틴업무':'var(--blue)','프로젝트':'var(--green)','자율업무':'var(--amber)'};
+  const catList = Object.keys(db.categories);
+  const iconPool = ['📌','🗂','💡','⚖️','📋','🔍','📊','🏛','✍️'];
+  const colorPool = ['var(--blue)','var(--green)','var(--amber)','var(--red)','#7c5cbf','#c0694a','#2a8a7a'];
 
-  document.getElementById('itemsGrid').innerHTML = cats.map(cat => {
+  // 카테고리 관리 헤더
+  const catManagerHtml = `
+    <div class="card" style="grid-column:1/-1;margin-bottom:4px">
+      <div class="card-title" style="justify-content:space-between">
+        <span>📂 분류 관리</span>
+        <span style="font-size:11px;color:var(--text-muted);font-weight:400">분류를 추가·수정·삭제할 수 있습니다</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        ${catList.map((cat,i) => `
+          <div id="catChip-${i}" style="display:flex;align-items:center;gap:4px;background:var(--paper);border:1.5px solid var(--border);border-radius:20px;padding:5px 10px 5px 12px">
+            <span style="font-size:13px;font-weight:600;color:var(--text)">${iconPool[i%iconPool.length]} ${cat}</span>
+            <button onclick="startEditCat('${cat}',${i})" title="분류명 수정" style="width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:12px;display:flex;align-items:center;justify-content:center;border-radius:4px" onmouseover="this.style.background='var(--blue-bg)';this.style.color='var(--blue)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">✏️</button>
+            ${catList.length > 1 ? `<button onclick="deleteCat('${cat}')" title="분류 삭제" style="width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:4px" onmouseover="this.style.background='var(--red-bg)';this.style.color='var(--red)'" onmouseout="this.style.background='none';this.style.color='var(--text-muted)'">✕</button>` : ''}
+          </div>
+        `).join('')}
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" id="newCatInput" placeholder="새 분류명..." style="padding:6px 10px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;outline:none;width:130px" onkeydown="if(event.key==='Enter')addCat()" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'">
+          <button onclick="addCat()" style="padding:6px 14px;background:var(--amber);color:white;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">+ 추가</button>
+        </div>
+      </div>
+      <div id="catEditArea" style="margin-top:10px"></div>
+    </div>`;
+
+  const cardsHtml = catList.map((cat, ci) => {
     const items = db.categories[cat] || [];
+    const color = colorPool[ci % colorPool.length];
+    const icon = iconPool[ci % iconPool.length];
     const itemsHtml = items.length === 0
       ? `<div class="empty-state" style="padding:20px"><div class="empty-icon">📂</div>항목을 추가해주세요</div>`
       : items.map((item, idx) => {
           const count = db.logs.filter(l=>l.category===cat&&l.itemName===item).length;
           const safeItem = item.replace(/'/g,"\\'");
-          return `<div class="item-list-entry" id="itemEntry-${cat}-${idx}">
+          const safeCat = cat.replace(/'/g,"\\'");
+          return `<div class="item-list-entry" id="itemEntry-${ci}-${idx}">
             <span class="item-entry-name">${item}</span>
             <span class="item-entry-count">${count}건</span>
-            <button class="btn-edit-item" onclick="startEditItem('${cat}',${idx})" title="수정">✏️</button>
-            <button class="btn-del-item" onclick="deleteItem('${cat}','${safeItem}',${idx})" title="삭제">✕</button>
+            <button class="btn-edit-item" onclick="startEditItem('${safeCat}',${ci},${idx})" title="수정">✏️</button>
+            <button class="btn-del-item" onclick="deleteItem('${safeCat}','${safeItem}',${idx})" title="삭제">✕</button>
           </div>
-          <div id="itemEditArea-${cat}-${idx}"></div>`;
+          <div id="itemEditArea-${ci}-${idx}"></div>`;
         }).join('');
 
     return `<div class="card">
-      <div class="card-title" style="color:${colors[cat]}">${icons[cat]} ${cat}</div>
+      <div class="card-title" style="color:${color}">${icon} ${cat}</div>
       <div class="item-add-row">
         <input type="text" id="newItemInput-${cat}" placeholder="새 항목 입력..."
-          onkeydown="if(event.key==='Enter')addItem('${cat}')">
-        <button class="btn-add" onclick="addItem('${cat}')">+ 추가</button>
+          onkeydown="if(event.key==='Enter')addItem('${cat.replace(/'/g,"\\'")}')">
+        <button class="btn-add" onclick="addItem('${cat.replace(/'/g,"\\'")}')">+ 추가</button>
       </div>
       <div id="itemListUI-${cat}">${itemsHtml}</div>
     </div>`;
   }).join('');
+
+  document.getElementById('itemsGrid').innerHTML = catManagerHtml + cardsHtml;
+}
+
+// --- 카테고리 추가 ---
+function addCat() {
+  const input = document.getElementById('newCatInput');
+  const name = input.value.trim();
+  if (!name) { showToast('분류명을 입력해주세요'); return; }
+  if (db.categories[name] !== undefined) { showToast('이미 있는 분류명입니다'); return; }
+  db.categories[name] = [];
+  saveDB();
+  input.value = '';
+  renderItemsGrid();
+  renderCatPills();
+  showToast('분류 추가 완료');
+}
+
+// --- 카테고리 수정 ---
+function startEditCat(cat, idx) {
+  const area = document.getElementById('catEditArea');
+  if (!area) return;
+  area.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center;background:var(--paper);border-radius:8px;padding:10px 12px;border:1.5px solid var(--amber)">
+      <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">「${cat}」→</span>
+      <input id="catEditInput" value="${cat}" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;outline:none" onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')saveCatEdit('${cat.replace(/'/g,"\\'")}'); if(event.key==='Escape')cancelCatEdit()">
+      <button onclick="saveCatEdit('${cat.replace(/'/g,"\\'")}')  " style="padding:7px 14px;background:var(--navy);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">저장</button>
+      <button onclick="cancelCatEdit()" style="padding:7px 10px;border:1px solid var(--border);background:white;border-radius:6px;font-size:12px;cursor:pointer">취소</button>
+    </div>`;
+  const inp = document.getElementById('catEditInput');
+  if (inp) { inp.focus(); inp.select(); }
+}
+
+function cancelCatEdit() {
+  const area = document.getElementById('catEditArea');
+  if (area) area.innerHTML = '';
+}
+
+function saveCatEdit(oldName) {
+  const inp = document.getElementById('catEditInput');
+  const newName = inp ? inp.value.trim() : '';
+  if (!newName) { showToast('분류명을 입력해주세요'); return; }
+  if (newName === oldName) { cancelCatEdit(); return; }
+  if (db.categories[newName] !== undefined) { showToast('이미 있는 분류명입니다'); return; }
+
+  // 카테고리 이름 교체 (순서 유지)
+  const newCats = {};
+  Object.keys(db.categories).forEach(k => {
+    newCats[k === oldName ? newName : k] = db.categories[k];
+  });
+  db.categories = newCats;
+
+  // 기존 로그도 업데이트
+  db.logs.forEach(l => { if (l.category === oldName) l.category = newName; });
+
+  saveDB();
+  renderItemsGrid();
+  renderCatPills();
+  showToast('분류명 수정 완료');
+}
+
+// --- 카테고리 삭제 ---
+function deleteCat(cat) {
+  const logCount = db.logs.filter(l=>l.category===cat).length;
+  const itemCount = (db.categories[cat]||[]).length;
+  const msg = (logCount > 0 || itemCount > 0)
+    ? `「${cat}」분류와 항목 ${itemCount}개, 관련 기록 ${logCount}건이 모두 삭제됩니다. 계속할까요?`
+    : `「${cat}」분류를 삭제할까요?`;
+  if (!confirm(msg)) return;
+  delete db.categories[cat];
+  db.logs = db.logs.filter(l=>l.category!==cat);
+  saveDB();
+  renderItemsGrid();
+  renderCatPills();
+  showToast('분류 삭제 완료');
+}
+
+// --- 카테고리 pill 재렌더 (입력폼 동기화) ---
+function renderCatPills() {
+  const cats = Object.keys(db.categories);
+  const icons = {'루틴업무':'📌','프로젝트':'🗂','자율업무':'💡'};
+
+  // PC 폼
+  const pcRow = document.querySelector('.cat-pill-row');
+  if (pcRow) {
+    pcRow.innerHTML = cats.map(cat =>
+      `<button class="cat-pill" data-cat="${cat}" onclick="selectCat(this,'pc')">${icons[cat]||'📂'} ${cat}</button>`
+    ).join('');
+  }
+  // 모바일 시트
+  const mobRow = document.querySelector('.mob-cat-pill-row');
+  if (mobRow) {
+    mobRow.innerHTML = cats.map(cat =>
+      `<button class="cat-pill" data-cat="${cat}" onclick="selectCat(this,'mob')">${icons[cat]||'📂'} ${cat}</button>`
+    ).join('');
+  }
 }
 
 function addItem(cat) {
@@ -1808,45 +1938,46 @@ function deleteItem(cat, name, idx) {
 
 let editingItem = null;
 
-function startEditItem(cat, idx) {
+function startEditItem(cat, ci, idx) {
   if (editingItem) {
-    const [ec, ei] = editingItem;
-    const area = document.getElementById(`itemEditArea-${ec}-${ei}`);
-    const entry = document.getElementById(`itemEntry-${ec}-${ei}`);
+    const [ec, eci, ei] = editingItem;
+    const area = document.getElementById('itemEditArea-' + eci + '-' + ei);
+    const entry = document.getElementById('itemEntry-' + eci + '-' + ei);
     if(area) area.innerHTML = '';
     if(entry) entry.style.display = 'flex';
   }
-  if (editingItem && editingItem[0]===cat && editingItem[1]===idx) { editingItem = null; return; }
-  editingItem = [cat, idx];
+  if (editingItem && editingItem[0]===cat && editingItem[2]===idx) { editingItem = null; return; }
+  editingItem = [cat, ci, idx];
   const current = db.categories[cat][idx];
-  const entry = document.getElementById(`itemEntry-${cat}-${idx}`);
-  const area = document.getElementById(`itemEditArea-${cat}-${idx}`);
+  const safeCat = cat.replace(/'/g,"\\'");
+  const entry = document.getElementById('itemEntry-' + ci + '-' + idx);
+  const area  = document.getElementById('itemEditArea-' + ci + '-' + idx);
   if(entry) entry.style.display = 'none';
   if(area) area.innerHTML = `
     <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
-      <input class="item-edit-input" id="itemEditInput-${cat}-${idx}" value="${current}"
-        onkeydown="if(event.key==='Enter')saveItemEdit('${cat}',${idx}); if(event.key==='Escape')cancelItemEdit('${cat}',${idx})">
-      <button class="btn-add" onclick="saveItemEdit('${cat}',${idx})" style="padding:7px 12px;font-size:12px">저장</button>
-      <button class="btn-icon" onclick="cancelItemEdit('${cat}',${idx})" style="padding:7px 10px;font-size:12px">취소</button>
+      <input class="item-edit-input" id="itemEditInput-${ci}-${idx}" value="${current}"
+        onkeydown="if(event.key==='Enter')saveItemEdit('${safeCat}',${ci},${idx}); if(event.key==='Escape')cancelItemEdit('${safeCat}',${ci},${idx})">
+      <button class="btn-add" onclick="saveItemEdit('${safeCat}',${ci},${idx})" style="padding:7px 12px;font-size:12px">저장</button>
+      <button class="btn-icon" onclick="cancelItemEdit('${safeCat}',${ci},${idx})" style="padding:7px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer">취소</button>
     </div>`;
-  const inp = document.getElementById(`itemEditInput-${cat}-${idx}`);
+  const inp = document.getElementById('itemEditInput-' + ci + '-' + idx);
   if(inp) { inp.focus(); inp.select(); }
 }
 
-function cancelItemEdit(cat, idx) {
-  const area = document.getElementById(`itemEditArea-${cat}-${idx}`);
-  const entry = document.getElementById(`itemEntry-${cat}-${idx}`);
+function cancelItemEdit(cat, ci, idx) {
+  const area  = document.getElementById('itemEditArea-' + ci + '-' + idx);
+  const entry = document.getElementById('itemEntry-' + ci + '-' + idx);
   if(area) area.innerHTML = '';
   if(entry) entry.style.display = 'flex';
   editingItem = null;
 }
 
-function saveItemEdit(cat, idx) {
-  const input = document.getElementById(`itemEditInput-${cat}-${idx}`);
+function saveItemEdit(cat, ci, idx) {
+  const input = document.getElementById('itemEditInput-' + ci + '-' + idx);
   const newName = input.value.trim();
   const oldName = db.categories[cat][idx];
   if (!newName) { showToast('항목명을 입력해주세요'); return; }
-  if (newName === oldName) { cancelItemEdit(cat, idx); return; }
+  if (newName === oldName) { cancelItemEdit(cat, ci, idx); return; }
   if (db.categories[cat].includes(newName)) { showToast('이미 있는 항목명입니다'); return; }
   db.categories[cat][idx] = newName;
   db.logs.forEach(l => { if(l.category===cat&&l.itemName===oldName) l.itemName=newName; });
@@ -1889,9 +2020,11 @@ function initReportDates() {
 function renderReportScreen() {
   const { mon, sun, monStr, sunStr } = getWeekDates(currentWeekOffset);
   const weekNum = getWeekNumber(mon);
-  const suffix = currentWeekOffset===0?' (이번 주)':currentWeekOffset===-1?' (지난 주)':'';
+  const suffix = currentWeekOffset===0?'이번 주':currentWeekOffset===-1?'지난 주':'';
   document.getElementById('weekLabel').textContent =
-    `${mon.getFullYear()}년 ${mon.getMonth()+1}월 ${weekNum}주차${suffix}`;
+    `${mon.getFullYear()}년 ${mon.getMonth()+1}월 ${weekNum}주차`;
+  const suffixEl = document.getElementById('weekSuffix');
+  if (suffixEl) { suffixEl.textContent = suffix; suffixEl.style.display = suffix ? 'inline-block' : 'none'; }
   document.getElementById('weekRange').textContent =
     `${monStr.slice(5).replace('-','/')} (월) ~ ${sunStr.slice(5).replace('-','/')} (일)`;
   document.getElementById('weekNextBtn').disabled = currentWeekOffset >= 0;
