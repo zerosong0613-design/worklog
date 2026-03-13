@@ -1384,6 +1384,7 @@ let db = {
     "프로젝트": ["컴플라이언스 점검체계 구축", "내부통제 고도화"],
     "자율업무": ["AI 법무 자동화 정리", "표준계약서 리뉴얼", "법무 KPI 설계"]
   },
+  closedItems: {},
   logs: []
 };
 
@@ -1400,6 +1401,7 @@ let editingItemIdx = null;
 function loadDB() {
   const raw = localStorage.getItem('legalWorkLog_v1');
   if (raw) { try { db = JSON.parse(raw); } catch(e) {} }
+  if (!db.closedItems) db.closedItems = {};  // 구버전 데이터 마이그레이션
 }
 
 function saveDB() {
@@ -1547,6 +1549,7 @@ function updateItemSelect(mode) {
   if (!cat) { sel.innerHTML = '<option value="">— 분류를 먼저 선택하세요 —</option>'; return; }
   sel.innerHTML = '<option value="">— 항목 선택 —</option>';
   (db.categories[cat] || []).forEach(item => {
+    if (db.closedItems[cat + '::' + item]) return; // 종결 항목 제외
     const o = document.createElement('option');
     o.value = item; o.textContent = item;
     sel.appendChild(o);
@@ -1787,34 +1790,67 @@ function renderItemsGrid() {
     const items = db.categories[cat] || [];
     const color = colorPool[ci % colorPool.length];
     const icon = iconPool[ci % iconPool.length];
-    const itemsHtml = items.length === 0
+    const activeItems = items.filter(item => !db.closedItems[cat+'::'+item]);
+    const closedItems = items.filter(item => !!db.closedItems[cat+'::'+item]);
+
+    const renderItem = (item, idx, isClosed) => {
+      const count = db.logs.filter(l=>l.category===cat&&l.itemName===item).length;
+      const safeItem = item.replace(/'/g,"\\'");
+      const safeCat = cat.replace(/'/g,"\\'");
+      return `<div class="item-list-entry${isClosed ? ' item-closed' : ''}" id="itemEntry-${ci}-${idx}">
+        <span class="item-entry-name" style="${isClosed ? 'color:var(--text-muted);text-decoration:line-through' : ''}">${item}</span>
+        ${isClosed ? '<span style="font-size:10px;background:#e8e5e0;color:var(--text-muted);padding:2px 7px;border-radius:10px;font-weight:600;margin-right:6px">종결</span>' : ''}
+        <span class="item-entry-count">${count}건</span>
+        <button onclick="toggleClosedItem('${safeCat}','${safeItem}')" title="${isClosed ? '종결 해제' : '종결 처리'}"
+          style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-size:12px;margin-left:4px;display:flex;align-items:center;justify-content:center;color:var(--text-muted)"
+          onmouseover="this.style.background='${isClosed ? 'var(--green-bg)' : 'var(--orange-bg)'}'"
+          onmouseout="this.style.background='white'">${isClosed ? '↩️' : '🔒'}</button>
+        <button class="btn-edit-item" onclick="startEditItem('${safeCat}',${ci},${idx})" title="수정">✏️</button>
+        <button class="btn-del-item" onclick="deleteItem('${safeCat}','${safeItem}',${idx})" title="삭제">✕</button>
+      </div>
+      <div id="itemEditArea-${ci}-${idx}"></div>`;
+    };
+
+    const activeHtml = activeItems.length === 0 && closedItems.length === 0
       ? `<div class="empty-state" style="padding:20px"><div class="empty-icon">📂</div>항목을 추가해주세요</div>`
-      : items.map((item, idx) => {
-          const count = db.logs.filter(l=>l.category===cat&&l.itemName===item).length;
-          const safeItem = item.replace(/'/g,"\\'");
-          const safeCat = cat.replace(/'/g,"\\'");
-          return `<div class="item-list-entry" id="itemEntry-${ci}-${idx}">
-            <span class="item-entry-name">${item}</span>
-            <span class="item-entry-count">${count}건</span>
-            <button class="btn-edit-item" onclick="startEditItem('${safeCat}',${ci},${idx})" title="수정">✏️</button>
-            <button class="btn-del-item" onclick="deleteItem('${safeCat}','${safeItem}',${idx})" title="삭제">✕</button>
-          </div>
-          <div id="itemEditArea-${ci}-${idx}"></div>`;
-        }).join('');
+      : activeItems.map((item) => renderItem(item, items.indexOf(item), false)).join('');
+
+    const closedHtml = closedItems.length > 0
+      ? `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+          <div style="font-size:10px;color:var(--text-muted);font-weight:600;margin-bottom:6px;letter-spacing:0.5px">🔒 종결된 항목</div>
+          ${closedItems.map((item) => renderItem(item, items.indexOf(item), true)).join('')}
+        </div>` : '';
 
     return `<div class="card">
-      <div class="card-title" style="color:${color}">${icon} ${cat}</div>
+      <div class="card-title" style="color:${color}">${icon} ${cat}
+        ${closedItems.length > 0 ? `<span style="margin-left:6px;font-size:10px;background:#e8e5e0;color:var(--text-muted);padding:2px 8px;border-radius:10px;font-weight:600">${closedItems.length}개 종결</span>` : ''}
+      </div>
       <div class="item-add-row">
         <input type="text" id="newItemInput-${cat}" placeholder="새 항목 입력..."
           onkeydown="if(event.key==='Enter')addItem('${cat.replace(/'/g,"\\'")}')">
         <button class="btn-add" onclick="addItem('${cat.replace(/'/g,"\\'")}')">+ 추가</button>
       </div>
-      <div id="itemListUI-${cat}">${itemsHtml}</div>
+      <div id="itemListUI-${cat}">${activeHtml}${closedHtml}</div>
     </div>`;
   }).join('');
 
   document.getElementById('itemsGrid').innerHTML = catManagerHtml + cardsHtml;
 }
+
+// --- 항목 종결 토글 ---
+function toggleClosedItem(cat, item) {
+  const key = cat + '::' + item;
+  if (db.closedItems[key]) {
+    delete db.closedItems[key];
+    showToast('↩️ 종결 해제됨 — 드롭다운에 다시 표시됩니다');
+  } else {
+    db.closedItems[key] = true;
+    showToast('🔒 종결 처리됨 — 신규 기록에서 숨겨집니다');
+  }
+  saveDB();
+  renderItemsGrid();
+}
+
 
 // --- 카테고리 추가 ---
 function addCat() {
