@@ -2522,6 +2522,7 @@ async function pullFromCloud() {
     const data = await res.json();
     const record = data?.record;
     if (!record?.categories || !record?.logs) throw new Error('올바른 데이터가 아닙니다');
+    if (!record.closedItems) record.closedItems = {};  // 구버전 데이터 마이그레이션
     db = record;
     localStorage.setItem('legalWorkLog_v1', JSON.stringify(db));
     renderStats(); renderLogList(); renderItemsGrid(); renderSummaryStats(); renderSidebarStats();
